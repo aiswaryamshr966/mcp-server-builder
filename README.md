@@ -200,3 +200,32 @@ The UI now includes a **Download ZIP** button in the toolbar; it calls the backe
 # Example: generate server and download zip via curl (server running locally)
 curl -X POST http://localhost:8080/api/servers/download -H 'Content-Type: application/json' -d @config.json --output myserver.zip
 ```
+
+## Deploy the UI to GitHub Pages
+
+You can publish the static UI (the front-end under `src/main/resources/static`) to GitHub Pages using the included GitHub Actions workflow. This will copy the static assets and publish them to the `gh-pages` branch automatically whenever you push to `main`.
+
+Steps:
+1. Ensure your repository is pushed to GitHub (origin).
+2. The workflow `.github/workflows/deploy-gh-pages.yml` runs on push to `main` and will publish the `public` directory to `gh-pages` using the built-in `GITHUB_TOKEN`.
+3. After the workflow completes, in your GitHub repository go to Settings -> Pages and ensure the source branch is `gh-pages` and directory `/`.
+
+Notes and caveats:
+- GitHub Pages is static hosting only. The `Download ZIP` and `Generate Server` features in the UI call backend endpoints (Spring Boot) and will not work from a purely static Pages site.
+- For full functionality (generate, download zip), host the backend on a server (Heroku, Render, AWS, DigitalOcean, or a VM) and point the UI to the backend URL by updating `API_BASE` in `src/main/resources/static/app.js` or by adding a small reverse-proxy.
+
+Manual deploy (alternative):
+- Build a `public/` folder with the static assets (`src/main/resources/static`) and push them to `gh-pages` branch (example):
+
+```bash
+# From repository root
+git checkout --orphan gh-pages
+git --work-tree public add --all
+git --work-tree public commit -m "Deploy static site"
+git push origin gh-pages --force
+# return to main branch
+git checkout main
+```
+
+This manual approach is useful if you want control over what gets published.
+
