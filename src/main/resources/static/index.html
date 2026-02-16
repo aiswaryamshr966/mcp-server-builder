@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Server Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --bg:#f5f7fb;
+            --card:#ffffff;
+            --muted:#6b7280;
+            --accent:#0f4c81; /* corporate blue */
+            --accent-2:#2563eb;
+            --success:#16a34a;
+            --danger:#dc2626;
+            --surface-2:#f3f6fb;
+            --radius:12px;
+        }
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+            background: linear-gradient(180deg,#eef2f7 0%, #f8fafc 100%);
+            color:#0f172a;
+            padding:24px;
+            -webkit-font-smoothing:antialiased;
+        }
+        .app-shell{
+            max-width:1200px;margin:0 auto;background:var(--card);border-radius:16px;box-shadow:0 8px 30px rgba(16,24,40,0.08);overflow:hidden;
+        }
+        .topbar{
+            display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;
+        }
+        .brand{display:flex;align-items:center;gap:14px}
+        .logo{
+            width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px
+        }
+        .brand h1{font-size:1.15rem;font-weight:700;margin:0}
+        .brand p{font-size:0.85rem;opacity:0.92;margin:0}
+
+        .toolbar{display:flex;align-items:center;gap:10px}
+        .tool-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.08);color:#fff;padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer}
+        .tool-btn:hover{background:rgba(255,255,255,0.18)}
+
+        .content{
+            display:grid;grid-template-columns:1fr 420px;gap:28px;padding:28px;
+        }
+        @media (max-width:1000px){.content{grid-template-columns:1fr;}}
+
+        .panel{background:var(--surface-2);padding:20px;border-radius:var(--radius);}
+        .form-panel{min-height:320px}
+        .preview-panel{background:#0b1220;color:#e6eef8;overflow:auto}
+
+        .section-title{font-size:1rem;color:#0b1220;margin-bottom:12px;font-weight:600}
+        label{display:block;margin-bottom:6px;color:var(--muted);font-size:0.9rem}
+        input[type=text],textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #e6eef6;background:#fff}
+        textarea{min-height:90px;font-family:Inter,monospace}
+
+        .controls{display:flex;gap:12px;margin-top:12px}
+        .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+        .btn-primary{background:var(--accent-2);color:#fff}
+        .btn-secondary{background:#eef2ff;color:var(--accent-2)}
+        .btn-ghost{background:transparent;border:1px solid #e6eef6}
+
+        .add-btn{background:linear-gradient(90deg,#10b981,#059669);color:#fff;padding:8px 12px;border-radius:10px;border:none}
+
+        .tool-item,.resource-item{background:#fff;border:1px solid #e6eef6;padding:14px;border-radius:12px;margin-bottom:12px}
+        .parameter-item{background:#fbfdff;border:1px solid #eef2ff;padding:10px;border-radius:8px;margin-bottom:10px}
+
+        .small{font-size:0.85rem;color:var(--muted)}
+
+        .preview-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.04)}
+        .preview-code{padding:16px;font-family:Consolas,monospace;background:#071023;min-height:360px;color:#dbeafe;white-space:pre-wrap}
+
+        .msg{padding:12px;border-radius:10px;margin-bottom:12px}
+        .msg-success{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
+        .msg-error{background:#fff1f2;color:#7f1d1d;border:1px solid #fecaca}
+
+        .meta-row{display:flex;gap:12px;align-items:center}
+        .meta-row .meta{background:#fff;border:1px solid #e6eef6;padding:8px 10px;border-radius:8px;font-size:0.9rem}
+
+        /* editor container */
+        .impl-editor{height:180px;border:1px solid #e6eef6;border-radius:8px;overflow:hidden}
+
+        /* dark theme */
+        .theme-dark{--bg:#071023;--card:#071425;--muted:#9aa6b2;--accent:#1f6fb2;--accent-2:#2563eb;--surface-2:#0b1220;color:#dbeafe}
+        .theme-dark body{background:#071023}
+
+    </style>
+</head>
+<body>
+    <div class="app-shell" id="appShell">
+        <div class="topbar">
+            <div class="brand">
+                <div class="logo">M</div>
+                <div>
+                    <h1>MCP Server Builder</h1>
+                    <p class="small">Generate production-ready MCP servers from configurations</p>
+                </div>
+            </div>
+            <div class="toolbar">
+                <select id="exampleSelect" style="padding:6px 8px;border-radius:8px;border:none;">
+                    <option value="">Load example...</option>
+                    <option value="weather">Weather Server</option>
+                    <option value="hello">Hello Server</option>
+                </select>
+                <button class="tool-btn" id="loadExampleBtn">Load</button>
+                <button class="tool-btn" id="exportBtn">Export config</button>
+                <button class="tool-btn" id="downloadZipBtn">Download ZIP</button>
+                <button class="tool-btn" id="toggleThemeBtn">Toggle Dark</button>
+                <button class="tool-btn" id="helpBtn">Help</button>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="panel form-panel">
+                <div id="message-container"></div>
+                <form id="serverForm">
+                    <div class="section-title">Server Details</div>
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="serverName">Server Name *</label>
+                            <input type="text" id="serverName" name="serverName" required placeholder="my-awesome-server">
+                        </div>
+                        <div class="form-group">
+                            <label for="version">Version</label>
+                            <input type="text" id="version" name="version" value="1.0.0" placeholder="1.0.0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Short description for your MCP server"></textarea>
+                    </div>
+
+                    <div class="section-title">Tools</div>
+                    <div id="toolsContainer"></div>
+                    <div style="margin-bottom:12px"><button type="button" class="add-btn" onclick="addTool()">+ Add Tool</button></div>
+
+                    <div class="section-title" style="margin-top:6px">Resources</div>
+                    <div id="resourcesContainer"></div>
+                    <div style="margin-bottom:12px"><button type="button" class="add-btn" onclick="addResource()">+ Add Resource</button></div>
+
+                    <div class="controls">
+                        <button type="button" class="btn btn-primary" onclick="generateServer()">Generate Server</button>
+                        <button type="button" class="btn btn-secondary" onclick="previewServer()">Preview Code</button>
+                        <button type="button" class="btn btn-ghost" onclick="exportConfig()">Download JSON</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel preview-panel">
+                <div class="preview-header">
+                    <div>
+                        <strong>Code Preview</strong>
+                        <div class="small">Preview of the generated server code (TypeScript)</div>
+                    </div>
+                    <div class="meta-row">
+                        <div class="meta small">Port: 8080</div>
+                        <div class="meta small">Runtime: Node.js</div>
+                    </div>
+                </div>
+                <div class="preview-code" id="previewCode">Use 'Preview Code' to render generated server.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help modal -->
+    <div id="helpModal" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.6);align-items:center;justify-content:center;z-index:2000;">
+        <div style="background:#fff;max-width:800px;width:90%;border-radius:12px;padding:20px;">
+            <h2>Quick Walkthrough</h2>
+            <ol>
+                <li>Use "Load example" to populate a sample server.</li>
+                <li>Edit tool parameters and implementation in the code editor.</li>
+                <li>Preview code to inspect generated TypeScript.</li>
+                <li>Generate server to create files on the server, or click Download ZIP to get a packaged server.</li>
+            </ol>
+            <p>Tip: Use the dark mode toggle for presentations.</p>
+            <div style="text-align:right;margin-top:12px;"><button id="closeHelpBtn" class="tool-btn">Close</button></div>
+        </div>
+    </div>
+
+    <!-- Monaco loader -->
+    <script>
+        // Try local vendor first (if you have placed monaco under /vendor/monaco), then CDN
+        (function(){
+            const localBase = '/vendor/monaco/min/vs';
+            function tryLoad(base) {
+                const s = document.createElement('script');
+                s.src = base.replace(/\/$/, '') + '/loader.js';
+                s.onload = () => { if (window.require) window.require.config({ paths: { 'vs': base } }); };
+                s.onerror = () => { /* failure will be handled by loading CDN below */ };
+                document.head.appendChild(s);
+            }
+            // Attempt local; also load CDN as fallback
+            tryLoad(localBase);
+            const cdn = 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.33.0/min/vs';
+            const s2 = document.createElement('script');
+            s2.src = cdn + '/loader.js';
+            s2.onload = () => { if (window.require) window.require.config({ paths: { 'vs': cdn } }); };
+            document.head.appendChild(s2);
+        })();
+    </script>
+
+    <script src="app.js"></script>
+</body>
+</html>
