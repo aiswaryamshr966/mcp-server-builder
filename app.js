@@ -60,32 +60,133 @@ const EXAMPLES = {
     }
 };
 
-// Initialize with one tool and restore theme
-window.addEventListener('DOMContentLoaded', () => {
-    addTool();
+// Pending actions queue to avoid TDZ issues when toolbar handlers run before EXAMPLES is initialized
+window._mcp_pendingActions = window._mcp_pendingActions || [];
+function enqueueAction(action) {
+    window._mcp_pendingActions.push(action);
+    // attempt to process immediately
+    processPendingActions();
+}
+function processPendingActions() {
+    // if no pending, nothing to do
+    if (!window._mcp_pendingActions || window._mcp_pendingActions.length === 0) return;
+    // If EXAMPLES not ready, only process actions that don't depend on it
+    let examplesReady = true;
+    try {
+        examplesReady = (typeof EXAMPLES !== 'undefined');
+    } catch (e) { examplesReady = false; }
 
-    // Theme
-    const saved = localStorage.getItem('mcp_theme');
-    if (saved === 'dark') document.documentElement.classList.add('theme-dark');
+    // Process a copy to avoid mutation issues
+    const pending = window._mcp_pendingActions.splice(0, window._mcp_pendingActions.length);
+    for (const act of pending) {
+        try {
+            switch (act.type) {
+                case 'load':
+                    if (examplesReady) {
+                        loadExample(act.name);
+                        appendDebugLog('Processed queued load: ' + act.name);
+                    } else {
+                        // re-enqueue for later
+                        window._mcp_pendingActions.push(act);
+                    }
+                    break;
+                case 'export':
+                    exportConfig(); appendDebugLog('Processed queued export');
+                    break;
+                case 'download':
+                    downloadZip(); appendDebugLog('Processed queued download');
+                    break;
+                case 'presentation':
+                    togglePresentation(); appendDebugLog('Processed queued presentation');
+                    break;
+                case 'theme':
+                    toggleTheme(); appendDebugLog('Processed queued theme');
+                    break;
+                case 'help':
+                    openHelp(); appendDebugLog('Processed queued help');
+                    break;
+                default:
+                    // unknown
+                    break;
+            }
+        } catch (e) {
+            // if action failed because EXAMPLES still not ready, re-enqueue.
+            if (act.type === 'load') {
+                window._mcp_pendingActions.push(act);
+            } else {
+                console.error('Failed to process action', act, e);
+            }
+        }
+    }
+}
 
-    // Toolbar buttons
+// Setup toolbar listeners separately so they can be bound even if DOMContentLoaded timing varies
+function setupToolbar() {
     const toggleBtn = document.getElementById('toggleThemeBtn');
     const exportBtn = document.getElementById('exportBtn');
     const helpBtn = document.getElementById('helpBtn');
     const loadBtn = document.getElementById('loadExampleBtn');
     const exampleSelect = document.getElementById('exampleSelect');
+    const downloadZipBtn = document.getElementById('downloadZipBtn');
+    const presentationBtn = document.getElementById('presentationBtn');
+    const closeHelpBtn = document.getElementById('closeHelpBtn');
 
     if (toggleBtn) toggleBtn.addEventListener('click', toggleTheme);
     if (exportBtn) exportBtn.addEventListener('click', exportConfig);
     if (helpBtn) helpBtn.addEventListener('click', () => { openHelp(); });
-    if (loadBtn && exampleSelect) loadBtn.addEventListener('click', () => { const v = exampleSelect.value; if (v) loadExample(v); });
-
-    const downloadZipBtn = document.getElementById('downloadZipBtn');
+    if (loadBtn && exampleSelect) loadBtn.addEventListener('click', () => { const v = exampleSelect.value; if (v) enqueueAction({ type: 'load', name: v }); });
     if (downloadZipBtn) downloadZipBtn.addEventListener('click', downloadZip);
-
-    const closeHelpBtn = document.getElementById('closeHelpBtn');
+    if (presentationBtn) presentationBtn.addEventListener('click', togglePresentation);
     if (closeHelpBtn) closeHelpBtn.addEventListener('click', closeHelp);
+
+    // Add delegation as a robust fallback (single handler) to avoid missing bindings
+    const toolbar = document.querySelector('.toolbar');
+    if (toolbar && !toolbar._delegationAdded) {
+        toolbar.addEventListener('click', (ev) => {
+            const btn = ev.target.closest && ev.target.closest('.tool-btn');
+            if (!btn) return;
+            const id = btn.id;
+            switch (id) {
+                case 'loadExampleBtn': {
+                    const sel = document.getElementById('exampleSelect');
+                    const v = sel && sel.value; if (v) enqueueAction({ type: 'load', name: v });
+                    break;
+                }
+                case 'exportBtn': exportConfig(); break;
+                case 'downloadZipBtn': downloadZip(); break;
+                case 'presentationBtn': togglePresentation(); break;
+                case 'toggleThemeBtn': toggleTheme(); break;
+                case 'helpBtn': openHelp(); break;
+            }
+            appendDebugLog(`Toolbar action: ${id}`);
+        });
+        toolbar._delegationAdded = true;
+    }
+}
+
+// call setup immediately (in case DOM is ready and listener didn't fire)
+setupToolbar();
+
+window.addEventListener('DOMContentLoaded', () => {
+    // Initialize UI state
+    addTool();
+
+    // Theme restore
+    const saved = localStorage.getItem('mcp_theme');
+    if (saved === 'dark') document.documentElement.classList.add('theme-dark');
+
+    // also ensure toolbar bound after DOMContentLoaded
+    setupToolbar();
 });
+
+// Presentation mode
+function togglePresentation() {
+    const shell = document.getElementById('appShell');
+    if (!shell) return;
+    const isOn = shell.classList.toggle('presentation');
+    const btn = document.getElementById('presentationBtn');
+    if (btn) btn.textContent = isOn ? 'Exit Presentation' : 'Presentation';
+}
 
 // Help modal controls
 function openHelp() { document.getElementById('helpModal').style.display = 'flex'; }
@@ -498,6 +599,21 @@ function clearForm() {
 }
 
 function loadExample(name) {
+    // Guard: EXAMPLES may not be ready if script execution order differs in some environments.
+    try {
+        // Probe EXAMPLES safely; accessing a lexical binding in TDZ throws, so catch and retry.
+        if (typeof EXAMPLES === 'undefined') {
+            appendDebugLog('EXAMPLES not ready; retrying loadExample for: ' + name);
+            setTimeout(() => loadExample(name), 80);
+            return;
+        }
+    } catch (probeErr) {
+        // If EXAMPLES is in temporal dead zone, schedule retry quietly
+        appendDebugLog('EXAMPLES probe error; retrying loadExample for: ' + name);
+        setTimeout(() => loadExample(name), 80);
+        return;
+    }
+
     const ex = EXAMPLES[name];
     if (!ex) return;
     clearForm();
@@ -534,3 +650,63 @@ function loadExample(name) {
     });
     showMessage('Example loaded into the form', 'success');
 }
+
+// Debug banner helpers
+function showDebugBanner() { const b = document.getElementById('debugBanner'); if (b) b.style.display = 'block'; }
+function hideDebugBanner() { const b = document.getElementById('debugBanner'); if (b) b.style.display = 'none'; }
+function clearDebugLog() { const l = document.getElementById('debugLog'); if (l) l.innerHTML = ''; }
+function appendDebugLog(msg) {
+    const l = document.getElementById('debugLog');
+    if (!l) return;
+    const time = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.textContent = `[${time}] ${msg}`;
+    l.insertBefore(entry, l.firstChild);
+    // keep only recent 30
+    while (l.childElementCount > 30) l.removeChild(l.lastChild);
+}
+
+// wire debug banner buttons
+(function wireDebug() {
+    function attach() {
+        const hide = document.getElementById('hideDebugBtn');
+        const clear = document.getElementById('clearDebugBtn');
+        if (hide) hide.addEventListener('click', hideDebugBanner);
+        if (clear) clear.addEventListener('click', clearDebugLog);
+    }
+
+    // Try attaching immediately (works if elements are already parsed)
+    try { attach(); } catch (e) { /* ignore */ }
+
+    // Also attach on DOMContentLoaded in case script ran before DOM was ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attach);
+    } else {
+        // if already ready, attach again to be safe
+        attach();
+    }
+})();
+
+// After EXAMPLES is declared, attempt to process any pending actions
+processPendingActions();
+
+// update wrappers & delegation to use enqueueAction for load to avoid direct EXAMPLES access
+function loadExampleFromSelect() {
+    try {
+        const sel = document.getElementById('exampleSelect');
+        const v = sel && sel.value;
+        if (v) { console.info('Enqueue load example:', v); appendDebugLog('Enqueue load example: ' + v); enqueueAction({ type: 'load', name: v }); }
+        else { console.info('No example selected'); appendDebugLog('Load example: none selected'); }
+        showDebugBanner();
+    } catch (e) { console.error(e); appendDebugLog('Load example error: ' + e.message); showDebugBanner(); }
+}
+
+// modify delegation: replace direct loadExample call with enqueueAction
+// locate the delegation switch and replace the load case: already handled above in setupToolbar
+
+// other wrappers keep calling enqueueAction where appropriate
+function triggerExportConfig() { try { console.info('Export config triggered'); appendDebugLog('Export config'); enqueueAction({ type: 'export' }); showDebugBanner(); } catch (e) { console.error(e); appendDebugLog('Export error: ' + e.message); showDebugBanner(); } }
+function triggerDownloadZip() { try { console.info('Download ZIP triggered'); appendDebugLog('Download ZIP'); enqueueAction({ type: 'download' }); showDebugBanner(); } catch (e) { console.error(e); appendDebugLog('Download ZIP error: ' + e.message); showDebugBanner(); } }
+function triggerPresentation() { try { console.info('Toggle presentation'); appendDebugLog('Toggle presentation'); enqueueAction({ type: 'presentation' }); showDebugBanner(); } catch (e) { console.error(e); appendDebugLog('Presentation error: ' + e.message); showDebugBanner(); } }
+function triggerToggleTheme() { try { console.info('Toggle theme'); appendDebugLog('Toggle theme'); enqueueAction({ type: 'theme' }); showDebugBanner(); } catch (e) { console.error(e); appendDebugLog('Toggle theme error: ' + e.message); showDebugBanner(); } }
+function triggerOpenHelp() { try { console.info('Open help'); appendDebugLog('Open help'); enqueueAction({ type: 'help' }); showDebugBanner(); } catch (e) { console.error(e); appendDebugLog('Open help error: ' + e.message); showDebugBanner(); } }

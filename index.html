@@ -18,32 +18,36 @@
             --radius:12px;
         }
         *{box-sizing:border-box;margin:0;padding:0}
+        /* base font size - bump slightly for readability */
         body{
             font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
             background: linear-gradient(180deg,#eef2f7 0%, #f8fafc 100%);
             color:#0f172a;
             padding:24px;
             -webkit-font-smoothing:antialiased;
+            font-size:16px;
         }
+        /* container width expanded so UI doesn't look small on large screens */
         .app-shell{
-            max-width:1200px;margin:0 auto;background:var(--card);border-radius:16px;box-shadow:0 8px 30px rgba(16,24,40,0.08);overflow:hidden;
+            max-width:1400px;margin:0 auto;background:var(--card);border-radius:16px;box-shadow:0 8px 30px rgba(16,24,40,0.08);overflow:hidden;
         }
         .topbar{
-            display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;
+            display:flex;align-items:center;justify-content:space-between;padding:22px 32px;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;
         }
-        .brand{display:flex;align-items:center;gap:14px}
+        .brand{display:flex;align-items:center;gap:16px}
         .logo{
-            width:48px;height:48px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px
+            width:56px;height:56px;border-radius:12px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px
         }
-        .brand h1{font-size:1.15rem;font-weight:700;margin:0}
-        .brand p{font-size:0.85rem;opacity:0.92;margin:0}
+        .brand h1{font-size:1.25rem;font-weight:700;margin:0}
+        .brand p{font-size:0.95rem;opacity:0.92;margin:0}
 
         .toolbar{display:flex;align-items:center;gap:10px}
-        .tool-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.08);color:#fff;padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer}
+        .tool-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.08);color:#fff;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
         .tool-btn:hover{background:rgba(255,255,255,0.18)}
 
+        /* make main content wider and preview panel larger */
         .content{
-            display:grid;grid-template-columns:1fr 420px;gap:28px;padding:28px;
+            display:grid;grid-template-columns:1fr 560px;gap:28px;padding:28px;
         }
         @media (max-width:1000px){.content{grid-template-columns:1fr;}}
 
@@ -51,36 +55,47 @@
         .form-panel{min-height:320px}
         .preview-panel{background:#0b1220;color:#e6eef8;overflow:auto}
 
-        .section-title{font-size:1rem;color:#0b1220;margin-bottom:12px;font-weight:600}
-        label{display:block;margin-bottom:6px;color:var(--muted);font-size:0.9rem}
-        input[type=text],textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #e6eef6;background:#fff}
-        textarea{min-height:90px;font-family:Inter,monospace}
+        .section-title{font-size:1.05rem;color:#0b1220;margin-bottom:12px;font-weight:600}
+        label{display:block;margin-bottom:6px;color:var(--muted);font-size:0.95rem}
+        input[type=text],textarea,select{width:100%;padding:12px;border-radius:10px;border:1px solid #e6eef6;background:#fff;font-size:0.95rem}
+        textarea{min-height:100px;font-family:Inter,monospace}
 
         .controls{display:flex;gap:12px;margin-top:12px}
-        .btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+        .btn{padding:12px 16px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
         .btn-primary{background:var(--accent-2);color:#fff}
         .btn-secondary{background:#eef2ff;color:var(--accent-2)}
         .btn-ghost{background:transparent;border:1px solid #e6eef6}
 
-        .add-btn{background:linear-gradient(90deg,#10b981,#059669);color:#fff;padding:8px 12px;border-radius:10px;border:none}
+        .add-btn{background:linear-gradient(90deg,#10b981,#059669);color:#fff;padding:10px 14px;border-radius:10px;border:none}
 
-        .tool-item,.resource-item{background:#fff;border:1px solid #e6eef6;padding:14px;border-radius:12px;margin-bottom:12px}
-        .parameter-item{background:#fbfdff;border:1px solid #eef2ff;padding:10px;border-radius:8px;margin-bottom:10px}
+        .tool-item,.resource-item{background:#fff;border:1px solid #e6eef6;padding:16px;border-radius:12px;margin-bottom:12px}
+        .parameter-item{background:#fbfdff;border:1px solid #eef2ff;padding:12px;border-radius:8px;margin-bottom:10px}
 
-        .small{font-size:0.85rem;color:var(--muted)}
+        .small{font-size:0.9rem;color:var(--muted)}
 
         .preview-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.04)}
-        .preview-code{padding:16px;font-family:Consolas,monospace;background:#071023;min-height:360px;color:#dbeafe;white-space:pre-wrap}
+        .preview-code{padding:18px;font-family:Consolas,monospace;background:#071023;min-height:420px;color:#dbeafe;white-space:pre-wrap}
 
         .msg{padding:12px;border-radius:10px;margin-bottom:12px}
         .msg-success{background:#ecfdf5;color:#065f46;border:1px solid #bbf7d0}
         .msg-error{background:#fff1f2;color:#7f1d1d;border:1px solid #fecaca}
 
         .meta-row{display:flex;gap:12px;align-items:center}
-        .meta-row .meta{background:#fff;border:1px solid #e6eef6;padding:8px 10px;border-radius:8px;font-size:0.9rem}
+        .meta-row .meta{background:#fff;border:1px solid #e6eef6;padding:8px 12px;border-radius:8px;font-size:0.95rem}
 
         /* editor container */
-        .impl-editor{height:180px;border:1px solid #e6eef6;border-radius:8px;overflow:hidden}
+        .impl-editor{height:220px;border:1px solid #e6eef6;border-radius:8px;overflow:hidden}
+
+        /* presentation mode: enlarge controls and panels for demos */
+        .app-shell.presentation {
+            max-width:1600px;
+        }
+        .app-shell.presentation .topbar { padding:28px 36px; }
+        .app-shell.presentation .logo { width:68px; height:68px; font-size:24px; }
+        .app-shell.presentation .tool-btn { padding:12px 18px; font-size:1rem; }
+        .app-shell.presentation .preview-code { min-height:520px; padding:22px; }
+        .app-shell.presentation .impl-editor { height:280px; }
+        .app-shell.presentation .btn { padding:14px 18px; font-size:1.02rem }
 
         /* dark theme */
         .theme-dark{--bg:#071023;--card:#071425;--muted:#9aa6b2;--accent:#1f6fb2;--accent-2:#2563eb;--surface-2:#0b1220;color:#dbeafe}
@@ -104,11 +119,12 @@
                     <option value="weather">Weather Server</option>
                     <option value="hello">Hello Server</option>
                 </select>
-                <button class="tool-btn" id="loadExampleBtn">Load</button>
-                <button class="tool-btn" id="exportBtn">Export config</button>
-                <button class="tool-btn" id="downloadZipBtn">Download ZIP</button>
-                <button class="tool-btn" id="toggleThemeBtn">Toggle Dark</button>
-                <button class="tool-btn" id="helpBtn">Help</button>
+                <button class="tool-btn" id="loadExampleBtn" onclick="loadExampleFromSelect()">Load</button>
+                <button class="tool-btn" id="exportBtn" onclick="triggerExportConfig()">Export config</button>
+                <button class="tool-btn" id="downloadZipBtn" onclick="triggerDownloadZip()">Download ZIP</button>
+                <button class="tool-btn" id="presentationBtn" onclick="triggerPresentation()">Presentation</button>
+                <button class="tool-btn" id="toggleThemeBtn" onclick="triggerToggleTheme()">Toggle Dark</button>
+                <button class="tool-btn" id="helpBtn" onclick="triggerOpenHelp()">Help</button>
             </div>
         </div>
 
@@ -178,6 +194,18 @@
             <p>Tip: Use the dark mode toggle for presentations.</p>
             <div style="text-align:right;margin-top:12px;"><button id="closeHelpBtn" class="tool-btn">Close</button></div>
         </div>
+    </div>
+
+    <!-- Temporary debug banner (remove for production) -->
+    <div id="debugBanner" style="display:none;position:fixed;bottom:16px;left:16px;z-index:3000;max-width:520px;background:#ffffffee;border:1px solid #e6eef6;padding:10px;border-radius:10px;box-shadow:0 8px 24px rgba(12,24,48,0.12);font-family:Inter, monospace;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <strong style="color:#0b1220;">DEBUG</strong>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button id="clearDebugBtn" type="button" class="tool-btn" onclick="clearDebugLog()" style="background:#eef2ff;color:#2563eb;padding:6px 8px;border-radius:6px;">Clear</button>
+                <button id="hideDebugBtn" type="button" class="tool-btn" onclick="hideDebugBanner()" style="background:transparent;color:#666;padding:6px 8px;border-radius:6px;">Hide</button>
+            </div>
+        </div>
+        <div id="debugLog" style="max-height:160px;overflow:auto;font-size:12px;color:#0b1220;"></div>
     </div>
 
     <!-- Monaco loader -->
